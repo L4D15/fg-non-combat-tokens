@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root version="3.3">
+	<properties>
+		<name>Feature: Non-Combat Tokens</name>
+		<version>1.0.0</version>
+		<loadorder>50</loadorder>
+		<description>
+			<text>Dropping an NPC on a map places only its token, without adding it to the Combat Tracker. Double-clicking the token opens its record, and the token's context menu adds it to the Combat Tracker.</text>
+			<author>José Ladislao</author>
+		</description>
+	</properties>
+
+	<announcement text="Non-Combat Tokens v1.0.0" font="emotefont" />
+
+	<base>
+		<includefile source="strings/strings.xml" />
+
+		<script name="NonCombatTokens" file="scripts/noncombat_tokens.lua" />
+	</base>
+</root>
