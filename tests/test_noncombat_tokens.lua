@@ -55,6 +55,7 @@ local function newToken(nodeContainer, tAdd)
 	token.setOrientation = function() end
 	token.setName = function(s) token.name = s; end
 	token.registerMenuItem = function(sLabel, sIcon, nSlot) token.menu[nSlot] = sLabel; end
+	token.resetMenuItems = function() token.menu = {}; end
 	token.delete = function() tTokens[token.id] = nil; fire("onDelete", token); end
 	tTokens[token.id] = token;
 	fire("onAdd", token, false);
@@ -84,6 +85,8 @@ TokenManager = {
 	handleDoubleClickOpen = function(tokenMap) return tokenMap.inCT == true; end,
 	setDragTokenUnits = function(n) TokenManager.units = n; end,
 	endDragTokenWithUnits = function() TokenManager.units = nil; end,
+	linkToken = function(nodeCT, tokenMap) DB.setValue(nodeCT, "tokenrefid", "string", tostring(tokenMap.getId())); tokenMap.inCT = true; end,
+	updateVisibility = function() end,
 };
 ActorManager = {
 	getRecordType = function(v)
@@ -106,7 +109,11 @@ CombatRecordManager = {
 		return true;
 	end,
 };
+CombatDropManager = {
+	handleAnyDrop = function(draginfo, sTargetPath) CombatDropManager.dropped = { draginfo.getType(), sTargetPath }; return true; end,
+};
 CombatManager = {
+	getCTFromToken = function(tokenMap) if tokenMap.inCT then return true; end end,
 	getCTFromNode = function(s) for _,t in ipairs(tCT) do if t.sRecord == s then return t.nodeCT; end end end,
 	replaceCombatantToken = function(nodeCT, tokenMap)
 		local x, y = tokenMap.getPosition();
@@ -133,6 +140,7 @@ DB.setValue(nodeHidden, "name", "string", "Goblin King");
 DB.setValue(nodeHidden, "nonid_name", "string", "Big Goblin");
 DB.setValue(nodeHidden, "isidentified", "number", 0);
 newNode("charsheet.id-00001");
+DB.setValue(newNode("npc.id-00003"), "name", "string", "Orc");
 
 local cImage = {
 	snapToGrid = function(x, y) return x - (x % 50), y - (y % 50); end,
@@ -219,7 +227,27 @@ tDropCallbacks["token"](cImage, 0, 0, drag("npc", "npc.id-00002", "tokens/king.p
 local tokenOrphan = lastToken();
 DB.deleteNode(nodeHidden);
 assert(TokenManager.handleDoubleClickOpen(tokenOrphan) == false);
-assert(addTokenToCT(tokenOrphan) == false and tStrings[#tStrings] == "noncombattokens_error_norecord");
+assert(addTokenToCT(tokenOrphan) == nil and tStrings[#tStrings] == "noncombattokens_error_norecord");
 print("deleted record OK");
+
+-- Effect dropped on a non-combat token: added to the CT keeping the same token, then the effect is applied
+local function dragType(sType) return { getType = function() return sType; end }; end
+tDropCallbacks["token"](cImage, 0, 0, drag("npc", "npc.id-00003", "tokens/orc.png"));
+local tokenOrc = lastToken();
+local nCT = #tCT;
+fire("onDrop", tokenOrc, dragType("damage"));
+assert(#tCT == nCT and CombatDropManager.dropped == nil, "non-effect drops are ignored");
+fire("onDrop", tokenLoose, dragType("effect"));
+assert(#tCT == nCT and CombatDropManager.dropped == nil, "unlinked tokens are ignored");
+fire("onDrop", tokenOrc, dragType("effect"));
+assert(#tCT == nCT + 1 and tCT[#tCT].sRecord == "npc.id-00003", "added to CT");
+assert(tTokens[tokenOrc.id] == tokenOrc and tokenOrc.inCT, "same token kept and linked");
+assert(next(tokenOrc.menu) == nil, "menu item removed");
+assert(getEntry(tokenOrc) == nil, "link removed");
+assert(CombatDropManager.dropped[1] == "effect" and CombatDropManager.dropped[2] == tCT[#tCT].nodeCT.path, "effect applied to the new combatant");
+CombatDropManager.dropped = nil;
+fire("onDrop", tokenOrc, dragType("effect"));
+assert(#tCT == nCT + 1 and CombatDropManager.dropped == nil, "tokens already in the CT are left to CoreRPG");
+print("effect drop OK");
 
 print("all tests OK");
