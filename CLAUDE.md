@@ -4,7 +4,7 @@ Fantasy Grounds Unity extension for CoreRPG-based rulesets. See `README.md` for 
 
 ## Workflow
 
-- Git Flow: `main` holds releases (tagged `X.Y.Z`), `develop` is the integration branch, work happens in `feature/*` branches merged into `develop` with `--no-ff`; releases go through `release/X.Y.Z`. Keep `<version>` and the announcement in `ext/extension.xml` in sync with the release.
+- Git Flow: `main` holds releases (tagged `X.Y.Z`), `develop` is the integration branch, work happens in `feature/*` branches merged into `develop` with `--no-ff`; releases go through `release/X.Y.Z`. Keep `<version>` and the announcement in `ext/extension.xml` in sync with the release. Pushing the tag triggers `.github/workflows/release.yml`, which fails unless the tagged commit is on `main` and the tag equals `<version>`.
 - Run `tests/run.sh` after changing `ext/scripts/`. The stubs imitate CoreRPG; they do not replace testing in FG (`/reload`, errors in `~/.smiteworks/fgdata/console.log`).
 
 ## How it works (`ext/scripts/noncombat_tokens.lua`)
