@@ -32,6 +32,7 @@ function onTabletopInit()
 	Token.addEventHandler("onDelete", NonCombatTokens.onTokenDelete);
 	Token.addEventHandler("onContainerChanged", NonCombatTokens.onContainerChanged);
 	Token.addEventHandler("onMenuSelection", NonCombatTokens.onMenuSelection);
+	Token.addEventHandler("onDrop", NonCombatTokens.onTokenDrop);
 end
 
 --
@@ -178,15 +179,17 @@ function onMenuSelection(tokenMap, nSelection, ...)
 	end
 	NonCombatTokens.addTokenToCT(tokenMap);
 end
-function addTokenToCT(tokenMap)
+-- Returns the new combatant node, or nil.
+-- bKeepToken links the existing token instead of replacing it with the CT token.
+function addTokenToCT(tokenMap, bKeepToken)
 	local sClass, sRecord, nodeEntry = NonCombatTokens.getTokenRecord(tokenMap);
 	if not nodeEntry then
-		return false;
+		return nil;
 	end
 	local nodeRecord = sRecord and DB.findNode(sRecord);
 	if not nodeRecord then
 		ChatManager.SystemMessage(Interface.getString("noncombattokens_error_norecord"));
-		return false;
+		return nil;
 	end
 
 	-- No tPlacement: the combatant is added without a token, then takes over the existing one
@@ -199,12 +202,18 @@ function addTokenToCT(tokenMap)
 	CombatRecordManager.onRecordTypeEvent(ActorManager.getRecordType(nodeRecord), tCustom);
 	if not tCustom.nodeCT then
 		ChatManager.SystemMessage(Interface.getString("noncombattokens_error_addfailed"));
-		return false;
+		return nil;
 	end
 
 	DB.deleteNode(nodeEntry);
-	CombatManager.replaceCombatantToken(tCustom.nodeCT, tokenMap);
-	return true;
+	if bKeepToken then
+		tokenMap.resetMenuItems();
+		TokenManager.linkToken(tCustom.nodeCT, tokenMap);
+		TokenManager.updateVisibility(tCustom.nodeCT);
+	else
+		CombatManager.replaceCombatantToken(tCustom.nodeCT, tokenMap);
+	end
+	return tCustom.nodeCT;
 end
 
 --
@@ -216,6 +225,18 @@ function onTokenAdd(tokenMap, _)
 	if NonCombatTokens.getEntry(tokenMap) then
 		NonCombatTokens.addMenu(tokenMap);
 	end
+end
+-- Effects live on combatants: dropping one on a non-combat token adds it to the CT first.
+-- Runs after TokenManager.onDrop, which ignores drops on tokens without a combatant.
+function onTokenDrop(tokenMap, draginfo)
+	if draginfo.getType() ~= "effect" or CombatManager.getCTFromToken(tokenMap) or not NonCombatTokens.getEntry(tokenMap) then
+		return;
+	end
+	local nodeCT = NonCombatTokens.addTokenToCT(tokenMap, true);
+	if not nodeCT then
+		return true;
+	end
+	return CombatDropManager.handleAnyDrop(draginfo, DB.getPath(nodeCT));
 end
 function onTokenDelete(tokenMap)
 	local nodeEntry = NonCombatTokens.getEntry(tokenMap);

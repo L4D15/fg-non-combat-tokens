@@ -13,4 +13,5 @@ Fantasy Grounds Unity extension for CoreRPG-based rulesets. See `README.md` for 
 - `onTabletopInit` registers `Token` events. Token menu items do not persist, so `onAdd` (also fired on image load) re-registers them.
 - Token → record links live in the campaign node `noncombattokens`: `imagenode`, `tokenid` (string), `link` (windowreference).
 - "Add to Combat Tracker" calls `CombatRecordManager.onRecordTypeEvent` without `tPlacement`, then `CombatManager.replaceCombatantToken` swaps in the CT token at the same position.
+- Effect drops (`Token` `onDrop`, drag type `effect`) on a linked token add it to the CT keeping the same token (`TokenManager.linkToken`), then apply the effect through `CombatDropManager.handleAnyDrop`. This relies on CoreRPG's `TokenManager.onDrop` handler being registered first and ignoring tokens without a combatant. Mothership disables effect drops (`GameSystem.targetactions`).
 - CoreRPG source: `~/.smiteworks/fgdata/rulesets/CoreRPG.pak` (zip). Relevant: `scripts/manager_image.lua`, `scripts/manager_token.lua`, `scripts/manager_combat_record.lua`, `scripts/manager_combat.lua`.
