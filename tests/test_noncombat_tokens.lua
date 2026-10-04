@@ -54,6 +54,8 @@ local function newToken(nodeContainer, tAdd)
 	token.getOrientation = function() return 0; end
 	token.setOrientation = function() end
 	token.setName = function(s) token.name = s; end
+	token.visible = true;
+	token.isVisible = function() return token.visible; end
 	token.registerMenuItem = function(sLabel, sIcon, nSlot) token.menu[nSlot] = sLabel; end
 	token.resetMenuItems = function() token.menu = {}; end
 	token.delete = function() tTokens[token.id] = nil; fire("onDelete", token); end
@@ -217,6 +219,7 @@ assert(#tCT == 1 and tCT[1].sRecord == "npc.id-00001" and tCT[1].sToken == "toke
 assert(entries() == 0, "link removed once in CT");
 assert(tTokens[99] == nil and CombatManager.linked.inCT, "token replaced by CT token");
 assert(CombatManager.linked.x == 100 and CombatManager.linked.y == 50, "same position");
+assert(DB.getValue(tCT[1].nodeCT, "tokenvis") == 1, "visible token stays visible");
 print("add to CT OK");
 
 -- NPC already in the CT keeps the default behavior
@@ -244,6 +247,7 @@ fire("onDrop", tokenLoose, dragType("effect"));
 assert(#tCT == nCT and CombatDropManager.dropped == nil, "unlinked tokens are ignored");
 fire("onDrop", tokenOrc, dragType("effect"));
 assert(#tCT == nCT + 1 and tCT[#tCT].sRecord == "npc.id-00003", "added to CT");
+assert(DB.getValue(tCT[#tCT].nodeCT, "tokenvis") == 1, "visible token stays visible");
 assert(tTokens[tokenOrc.id] == tokenOrc and tokenOrc.inCT, "same token kept and linked");
 assert(next(tokenOrc.menu) == nil, "menu item removed");
 assert(getEntry(tokenOrc) == nil, "link removed");
@@ -267,5 +271,14 @@ assert(getEntry(tGroup[3]) ~= nil, "unselected token untouched");
 fire("onMenuSelection", tGroup[3], MENU_SLOT);
 assert(#tCT == nCT + 3 and getEntry(tGroup[3]) == nil, "clicked token outside the selection added alone");
 print("add selection to CT OK");
+
+-- A hidden token stays hidden
+DB.setValue(newNode("npc.id-00005"), "name", "string", "Bat");
+tDropCallbacks["token"](cImage, 0, 0, drag("npc", "npc.id-00005", "tokens/bat.png"));
+local tokenHidden = lastToken();
+tokenHidden.visible = false;
+fire("onMenuSelection", tokenHidden, MENU_SLOT);
+assert(DB.getValue(tCT[#tCT].nodeCT, "tokenvis") == 0, "hidden token stays hidden");
+print("visibility kept OK");
 
 print("all tests OK");
