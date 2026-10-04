@@ -18,3 +18,9 @@ tests/run.sh                     # Lua tests with stubbed FG APIs (requires luaj
 ```
 
 The extension is installed into `~/.smiteworks/fgdata/extensions/`; set `FGDATA=PATH` to use another Fantasy Grounds data folder. Then enable it when loading the campaign, or run `/reload` if it is already enabled.
+
+## Releases
+
+Download `NonCombatTokens.ext` from the [Releases](../../releases) page and copy it into the `extensions` folder of your Fantasy Grounds data directory.
+
+Pushing a version tag (`X.Y.Z`) on `main` runs the tests, builds the extension and publishes a GitHub release with it attached. The tag must match `<version>` in `ext/extension.xml`.
