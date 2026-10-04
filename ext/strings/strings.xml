@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<string name="noncombattokens_menu_addtoct">Add to Combat Tracker</string>
+	<string name="noncombattokens_error_norecord">Non-Combat Tokens: the record linked to this token no longer exists; it cannot be added to the Combat Tracker.</string>
+	<string name="noncombattokens_error_addfailed">Non-Combat Tokens: the token could not be added to the Combat Tracker.</string>
+</root>
