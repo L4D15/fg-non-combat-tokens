@@ -75,11 +75,13 @@ Interface = {
 ChatManager = { SystemMessage = function(s) table.insert(tStrings, s); end };
 
 local tDropCallbacks = {};
+tSelection = {};
 local function origTokenDrop() ImageManagerOrigCalled = true; return true; end
 ImageManager = {
 	onImageTokenDrop = origTokenDrop,
 	registerDropCallback = function(sType, fn) tDropCallbacks[sType] = fn; end,
 	unregisterDropCallback = function(sType, fn) if tDropCallbacks[sType] == fn then tDropCallbacks[sType] = nil; end end,
+	getImageControl = function() return { getSelectedTokens = function() return tSelection; end }; end,
 };
 TokenManager = {
 	handleDoubleClickOpen = function(tokenMap) return tokenMap.inCT == true; end,
@@ -141,6 +143,7 @@ DB.setValue(nodeHidden, "nonid_name", "string", "Big Goblin");
 DB.setValue(nodeHidden, "isidentified", "number", 0);
 newNode("charsheet.id-00001");
 DB.setValue(newNode("npc.id-00003"), "name", "string", "Orc");
+DB.setValue(newNode("npc.id-00004"), "name", "string", "Wolf");
 
 local cImage = {
 	snapToGrid = function(x, y) return x - (x % 50), y - (y % 50); end,
@@ -249,5 +252,20 @@ CombatDropManager.dropped = nil;
 fire("onDrop", tokenOrc, dragType("effect"));
 assert(#tCT == nCT + 1 and CombatDropManager.dropped == nil, "tokens already in the CT are left to CoreRPG");
 print("effect drop OK");
+
+-- Menu on a selected token adds every selected non-combat token; otherwise only the clicked one
+local tGroup = {};
+for i = 1, 3 do
+	tDropCallbacks["token"](cImage, 0, 0, drag("npc", "npc.id-00004", "tokens/wolf.png"));
+	tGroup[i] = lastToken();
+end
+tSelection = { tGroup[1], tGroup[2], tokenLoose, tokenOrc };
+nCT = #tCT;
+fire("onMenuSelection", tGroup[1], MENU_SLOT);
+assert(#tCT == nCT + 2, "both selected non-combat tokens added");
+assert(getEntry(tGroup[3]) ~= nil, "unselected token untouched");
+fire("onMenuSelection", tGroup[3], MENU_SLOT);
+assert(#tCT == nCT + 3 and getEntry(tGroup[3]) == nil, "clicked token outside the selection added alone");
+print("add selection to CT OK");
 
 print("all tests OK");

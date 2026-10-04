@@ -174,10 +174,34 @@ function onMenuSelection(tokenMap, nSelection, ...)
 	if nSelection ~= MENU_SLOT or select("#", ...) > 0 then
 		return;
 	end
-	if not NonCombatTokens.getEntry(tokenMap) then
-		return;
+	for _,v in ipairs(NonCombatTokens.getMenuTargets(tokenMap)) do
+		NonCombatTokens.addTokenToCT(v);
 	end
-	NonCombatTokens.addTokenToCT(tokenMap);
+end
+-- The clicked token, plus every other selected non-combat token if it is part of the selection
+function getMenuTargets(tokenMap)
+	if not NonCombatTokens.getEntry(tokenMap) then
+		return {};
+	end
+	local cImage = ImageManager.getImageControl(tokenMap);
+	local tSelected = cImage and cImage.getSelectedTokens() or {};
+	local bInSelection = false;
+	for _,v in ipairs(tSelected) do
+		if v.getId() == tokenMap.getId() then
+			bInSelection = true;
+			break;
+		end
+	end
+	if not bInSelection then
+		return { tokenMap };
+	end
+	local tTargets = {};
+	for _,v in ipairs(tSelected) do
+		if NonCombatTokens.getEntry(v) then
+			table.insert(tTargets, v);
+		end
+	end
+	return tTargets;
 end
 -- Returns the new combatant node, or nil.
 -- bKeepToken links the existing token instead of replacing it with the CT token.
