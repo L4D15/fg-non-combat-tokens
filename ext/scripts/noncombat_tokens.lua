@@ -229,6 +229,10 @@ function addTokenToCT(tokenMap, bKeepToken)
 		return nil;
 	end
 
+	-- Keep the token's visibility; CoreRPG hides non-friendly combatants with tokenvis 0
+	local bVisible = tokenMap.isVisible();
+	DB.setValue(tCustom.nodeCT, "tokenvis", "number", bVisible and 1 or 0);
+
 	DB.deleteNode(nodeEntry);
 	if bKeepToken then
 		tokenMap.resetMenuItems();

@@ -2,7 +2,7 @@
 <root version="3.3">
 	<properties>
 		<name>Feature: Non-Combat Tokens</name>
-		<version>1.0.1</version>
+		<version>1.0.2</version>
 		<loadorder>50</loadorder>
 		<description>
 			<text>Dropping an NPC on a map places only its token, without adding it to the Combat Tracker. Double-clicking the token opens its record, and the token's context menu adds it to the Combat Tracker.</text>
@@ -10,7 +10,7 @@
 		</description>
 	</properties>
 
-	<announcement text="Non-Combat Tokens v1.0.1" font="emotefont" />
+	<announcement text="Non-Combat Tokens v1.0.2" font="emotefont" />
 
 	<base>
 		<includefile source="strings/strings.xml" />
